@@ -7,3 +7,5 @@ Here are the features I want the TODO app to have:
 - Mark tasks as uncompleted.
 - Set a priority level for tasks (e.g., low, medium, high).
 - Add optional logging.
+
+- Decide format of entries in todo list file. Probably use JSON.

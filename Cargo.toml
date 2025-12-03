@@ -5,4 +5,5 @@ edition = "2024"
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }
+flexi_logger = "0.31.7"
 log = "0.4.29"
