@@ -19,18 +19,60 @@ fn print_menu() {
     println!("1. View todo list");
     println!("2. Add a new todo");
     println!("3. Remove a todo");
-    println!("4. Exit");
+    println!("4. Toggle todo completion");
+    println!("5. Exit");
 }
 
-fn print_todo_list(contents: &str) {
-    if contents.trim().is_empty() {
-        println!("Your todo list is empty.");
+pub struct TodoItem {
+    completed: bool,
+    description: String,
+}
+
+// A todo item should look like:
+// [ ] Buy groceries
+// or
+// [x] Walk the dog
+fn parse_todo_item(line: &str) -> Result<TodoItem, String> {
+    let completed = line.starts_with("[x] ");
+    let not_completed = line.starts_with("[ ] ");
+    let description = if completed || not_completed {
+        line[4..].to_string()
     } else {
-        // println!("Your todo list:");
-        for (index, line) in contents.lines().enumerate() {
-            println!("{}. {}", index + 1, line);
+        return Err(format!("Invalid todo item format: {}", line));
+    };
+    Ok(TodoItem {
+        completed,
+        description,
+    })
+}
+
+fn parse_todo_list(contents: String) -> Vec<TodoItem> {
+    let mut items = Vec::new();
+    for line in contents.lines() {
+        match parse_todo_item(line) {
+            Ok(item) => items.push(item),
+            Err(e) => log::warn!("{}", e),
         }
     }
+    items
+}
+
+fn todo_item_to_string(item: &TodoItem) -> String {
+    let status = if item.completed { "[x]" } else { "[ ]" };
+    format!("{} {}", status, item.description)
+}
+
+fn todo_list_to_string(todo_list: &[TodoItem]) -> String {
+    todo_list
+        .iter()
+        .map(todo_item_to_string)
+        .collect::<Vec<String>>()
+        .join("\n")
+}
+
+fn print_todo_list(todo_list: &[TodoItem]) {
+    let output = todo_list_to_string(todo_list);
+    println!("{output}");
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -57,7 +99,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
-    print_todo_list(&contents);
+    let todo_list = parse_todo_list(contents);
+    print_todo_list(&todo_list);
 
     loop {
         print_menu();
@@ -68,10 +111,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Err(_) => continue,
         };
         match selection {
-            1 => println!("You selected 1"),
-            2 => println!("You selected 2"),
-            3 => println!("You selected 3"),
-            4 => {
+            1 => {
+                print_todo_list(&todo_list);
+            }
+            2 => println!("You selected {selection}"),
+            3 => println!("You selected {selection}"),
+            4 => println!("You selected {selection}"),
+            5 => {
                 println!("Exiting...");
                 break;
             }
@@ -79,6 +125,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    fs::write(&filepath, &contents)?;
+    fs::write(&filepath, todo_list_to_string(&todo_list))?;
     Ok(())
 }
